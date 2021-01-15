@@ -2,33 +2,34 @@ import { useState, useEffect } from "react";
 import BlogList from "./BlogList";
 
 const Home = () => {
-  const [blogs, setBlogs] = useState([
-    { title: "My new website", body: "lorem ipsum...", author: "mario", id: 1 },
-    { title: "Welcome party!", body: "lorem ipsum...", author: "yoshi", id: 2 },
-    {
-      title: "Web dev top tips",
-      body: "lorem ipsum...",
-      author: "mario",
-      id: 3,
-    },
-  ]);
-
-  const [name, setName] = useState("mario");
-
-  const handleDelete = (id) => {
-    const newBlogs = blogs.filter((blog) => blog.id !== id);
-    setBlogs(newBlogs);
-  };
+  const [blogs, setBlogs] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log("Сработал useEffect");
-  }, [name]);
+    fetch("http://localhost:8000/blogs")
+      .then((res) => {
+        if (!res.ok) {
+          throw Error("Немогу получить данные с этого ресурса");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setBlogs(data);
+        setIsLoading(false);
+        setError(null);
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        setError(err.message);
+      });
+  }, []);
 
   return (
     <div className="home">
-      <BlogList value={blogs} handleDelete={handleDelete} />
-      <button onClick={() => setName("luigi")}>change name</button>
-      <p>{name}</p>
+      {error && <div>{error}</div>}
+      {isLoading && <div>Loading ...</div>}
+      {blogs && <BlogList value={blogs} title="All Blogs!" />}
     </div>
   );
 };
